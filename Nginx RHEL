@@ -1,0 +1,31 @@
+nano /etc/nginx/conf.d/agnocon.conf
+------------------------------------------
+
+server {
+
+listen 80 default_server; server_name _;
+listen [::]:80 default_server;
+    location / {
+        proxy_pass http://localhost:5001;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_read_timeout 3600;
+    }
+}
+
+---------------------------------------------
+semanage port -a -t http_port_t -p tcp 5001
+semanage port -l | grep 5001
+getsebool httpd_can_network_connect 
+# - off
+setsebool -P httpd_can_network_connect on
+systemctl reload nginx
+curl -v http://localhost
