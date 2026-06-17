@@ -11,3 +11,38 @@ sudo dnf install -y dotnet-sdk-8.0
 dotnet --info
 
 fs_cli -x "lua ~require('json'); freeswitch.consoleLog('INFO','JSON OK\n')"
+
+# Niginx
+dnf install -y nginx
+
+# AgnoCon Service
+
+nano /etc/systemd/system/agnocon.service
+
+[Unit]
+Description=AgnoCon .NET Web API
+After=network.target
+
+[Service]
+WorkingDirectory=/var/www/agnocon
+ExecStart=/usr/bin/dotnet /var/www/agnocon/AgnoCon.dll
+Restart=always
+RestartSec=10
+KillSignal=SIGINT
+SyslogIdentifier=agnocon
+
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5000
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+[Install]
+WantedBy=multi-user.target
+
+systemctl daemon-reload
+systemctl enable agnocon
+systemctl start agnocon
+systemctl status agnocon
+
+ls -l /var/www/agnocon/*.dll
+
+journalctl -u agnocon -f
