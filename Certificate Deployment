@@ -1,0 +1,101 @@
+Step 1 — create the directories if they don't already exist:
+sudo mkdir -p /etc/ssl/private /etc/ssl/certs
+sudo chmod 700 /etc/ssl/private
+Step 2 — generate the key and certificate together:
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /etc/ssl/private/nginx-selfsigned.key \
+  -out /etc/ssl/certs/nginx-selfsigned.crt \
+  -subj "/C=IN/ST=TamilNadu/L=Chennai/O=AgnoCon/CN=192.168.8.178"
+
+Step 3 — lock down permissions on the private key:
+sudo chmod 600 /etc/ssl/private/nginx-selfsigned.key
+sudo chown root:root /etc/ssl/private/nginx-selfsigned.key
+
+Step 4 — fix SELinux context so nginx (httpd_t) can actually read these files:
+sudo restorecon -Rv /etc/ssl/private/ /etc/ssl/certs/
+ls -Z /etc/ssl/private/nginx-selfsigned.key
+ls -Z /etc/ssl/certs/nginx-selfsigned.crt
+
+or
+sudo semanage fcontext -a -t cert_t "/etc/ssl/private/nginx-selfsigned.key"
+sudo semanage fcontext -a -t cert_t "/etc/ssl/certs/nginx-selfsigned.crt"
+sudo restorecon -v /etc/ssl/private/nginx-selfsigned.key /etc/ssl/certs/nginx-selfsigned.crt
+
+Step 5 — verify the cert looks right:
+openssl x509 -in /etc/ssl/certs/nginx-selfsigned.crt -text -noout | grep -A1 "Subject:"
+
+sudo nano /etc/nginx/conf.d/agnocon.conf
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+
+    location / {
+        proxy_pass http://localhost:5001;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 3600;
+    }
+
+    # SIP WebSocket signaling -> FreeSWITCH
+    location /sip {
+        set $ws_scheme http;
+        set $ws_port 5066;
+
+        if ($scheme = 'https') {
+            set $ws_scheme https;
+            set $ws_port 7443;
+        }
+
+        proxy_pass $ws_scheme://192.168.8.178:$ws_port;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name _;
+
+    ssl_certificate     /etc/ssl/certs/nginx-selfsigned.crt;
+    ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+
+    location / {
+        proxy_pass http://localhost:5001;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 3600;
+    }
+
+    # SIP WebSocket signaling -> FreeSWITCH (WSS)
+    location /sip {
+        proxy_pass https://192.168.8.178:7443;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+}
