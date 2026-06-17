@@ -9,3 +9,5 @@ sudo dnf update -y
 sudo dnf install -y dotnet-sdk-8.0
 
 dotnet --info
+
+fs_cli -x "lua ~require('json'); freeswitch.consoleLog('INFO','JSON OK\n')"
