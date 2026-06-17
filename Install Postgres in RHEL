@@ -1,1 +1,27 @@
+dnf -qy module disable postgresql
 
+dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+
+dnf install -y postgresql16 postgresql16-server
+
+/usr/pgsql-16/bin/postgresql-16-setup initdb
+
+systemctl enable postgresql-16
+systemctl start postgresql-16
+
+systemctl status postgresql-16
+
+su - postgres
+
+psql
+
+SELECT version();
+
+ALTER USER postgres WITH PASSWORD 'Avaya@321';
+
+\q
+
+psql -U postgres -h localhost -W
+
+Path
+ /var/lib/pgsql/16/data/pg_hba.conf
