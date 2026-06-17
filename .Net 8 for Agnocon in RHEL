@@ -37,7 +37,26 @@ Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
 
 [Install]
 WantedBy=multi-user.target
+-----------------------------------Copied from COE --------------------------
 
+[Unit]
+Description=.NET Web API App running on Linux
+[Service]
+WorkingDirectory= /var/www/agnocon/
+ExecStart= /usr/bin/dotnet /var/www/agnocon/AgnoCon.Server.dll --port=5000
+Restart=always
+# Restart service after 10 seconds if the dotnet service crashes:
+RestartSec=10
+KillSignal=SIGINT
+SyslogIdentifier=dotnet-example
+User=www-data
+Environment=ASPNETCORE_ENVIRONMENT=Development
+
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+Environment=ASPNETCORE_URLS=http://0.0.0.0:5000
+[Install]
+WantedBy=multi-user.target
+--------------------------------------------------------------------------------------------
 systemctl daemon-reload
 systemctl enable agnocon
 systemctl start agnocon
