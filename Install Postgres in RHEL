@@ -28,3 +28,4 @@ Path
 
 sudo -u postgres createdb agnocon
 sudo -u postgres pg_restore -d agnocon agnocon_backup.dump
+sudo -u postgres psql -d agnocon -c "\dt"
