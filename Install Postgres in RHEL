@@ -25,3 +25,6 @@ psql -U postgres -h localhost -W
 
 Path
  /var/lib/pgsql/16/data/pg_hba.conf
+
+sudo -u postgres createdb agnocon
+sudo -u postgres pg_restore -d agnocon agnocon_backup.dump
