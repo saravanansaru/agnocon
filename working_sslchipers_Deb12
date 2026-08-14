@@ -1,0 +1,50 @@
+  sudo chmod 700 /etc/ssl/private
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt
+sudo openssl dhparam -out /etc/nginx/dhparam.pem 2048
+sudo nano /etc/nginx/snippets/self-signed.conf
+
+ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
+ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
+
+sudo nano /etc/nginx/snippets/ssl-params.conf
+
+# SSL Protocols
+ssl_protocols TLSv1.2;
+
+# SSL Ciphers
+ssl_prefer_server_ciphers on;
+ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+
+# Diffie-Hellman parameters
+ssl_dhparam /etc/nginx/dhparam.pem;
+
+# Elliptic Curve
+# Requires nginx >= 1.1.0
+ssl_ecdh_curve secp384r1;
+
+# SSL Session Settings
+ssl_session_timeout 10m;
+ssl_session_cache shared:SSL:10m;
+
+# Disable session tickets
+# Requires nginx >= 1.5.9
+ssl_session_tickets off;
+
+# OCSP Stapling
+# Requires nginx >= 1.3.7
+ssl_stapling on;
+ssl_stapling_verify on;
+
+# DNS Resolver for OCSP
+resolver 8.8.8.8 8.8.4.4 valid=300s;
+resolver_timeout 5s;
+
+# Security Headers
+
+# Disable HSTS for now.
+# Uncomment only if you understand the implications.
+# add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload";
+
+add_header X-Frame-Options DENY;
+add_header X-Content-Type-Options nosniff;
+add_header X-XSS-Protection "1; mode=block";
