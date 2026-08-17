@@ -2,6 +2,7 @@ nano /usr/local/freeswitch/conf/directory/default.xml
 <X-PRE-PROCESS cmd="exec" data="curl http://localhost/api/directory/"/>
 
 nano /usr/local/freeswitch/conf/autoload_configs/callcenter.conf.xml
+<param name="odbc-dsn" value="$${dbconnection}"/>
 <X-PRE-PROCESS cmd="exec" data="curl http://localhost/api/skillset/"/>
 
 nano /usr/local/freeswitch/conf/dialplan/default.xml
