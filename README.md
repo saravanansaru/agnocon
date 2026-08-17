@@ -8,7 +8,7 @@ nano /usr/local/freeswitch/conf/autoload_configs/callcenter.conf.xml
 nano /usr/local/freeswitch/conf/dialplan/default.xml
 <X-PRE-PROCESS cmd="exec" data="curl http://localhost/api/dialplan/"/>
 	<X-PRE-PROCESS cmd="exec" data="curl -k http://localhost/api/dialplan/"/>
-		<extension name="outbound_Jio">
+	<extension name="outbound_Jio">
     <condition field="destination_number" expression="^(((\+*)((0[ -]*)*|((91 )*))((\d{12})+|(\d{10})+))|\d{5}([- ]*)\d{6})$">		
 		<action application="log" data="X-Company-ID is ${sip_h_X-Company-ID}"/>
 		<action application="log" data="X-Company-ID is ${sip_h_X-User-ID}"/>
